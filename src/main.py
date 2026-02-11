@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
     QWidget,
     QTabWidget,
     QToolButton,
+    QMessageBox,
 )
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 import defaults
@@ -125,6 +126,15 @@ class SimpleBrowser(QMainWindow):
 
     def close_current_tab(self, i):
         if self.tabs.count() < 2:
+            reply = QMessageBox.question(
+                self,
+                "Close Browser?",
+                "This is the last tab. Do you want to close the application?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                QApplication.quit()
             return
         self.tabs.removeTab(i)
 
