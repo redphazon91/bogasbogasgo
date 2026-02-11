@@ -161,30 +161,39 @@ class SimpleBrowser(QMainWindow):
             self.apply_theme()
             self.save_settings()
 
+    def change_font_setting(self, use_theme_font):
+        self.use_theme_font = use_theme_font
+        self.apply_theme()
+        self.save_settings()
+
     def apply_theme(self):
         # Update all tabs
         for i in range(self.tabs.count()):
             widget = self.tabs.widget(i)
             if isinstance(widget, (SuaBandaWidget, SettingsWidget)):
-                widget.update_theme(self.current_theme)
+                widget.update_theme(
+                    self.current_theme, use_theme_font=self.use_theme_font
+                )
 
         # Update main window and bar styles
         self.update_styles()
 
     def load_settings(self):
         theme_name = "Claro"
+        self.use_theme_font = True
         if os.path.exists(self.settings_file):
             try:
                 with open(self.settings_file, "r") as f:
                     data = json.load(f)
                     theme_name = data.get("theme", "Claro")
+                    self.use_theme_font = data.get("use_theme_font", True)
             except Exception as e:
                 print(f"Error loading settings: {e}")
 
         self.current_theme = themes.THEMES.get(theme_name, themes.LIGHT)
 
     def save_settings(self):
-        data = {"theme": self.current_theme.name}
+        data = {"theme": self.current_theme.name, "use_theme_font": self.use_theme_font}
         try:
             with open(self.settings_file, "w") as f:
                 json.dump(data, f)
@@ -199,15 +208,22 @@ class SimpleBrowser(QMainWindow):
                 return
 
         settings = SettingsWidget(
-            current_theme_name=self.current_theme.name, theme=self.current_theme
+            current_theme_name=self.current_theme.name,
+            theme=self.current_theme,
+            use_theme_font=self.use_theme_font,
         )
         settings.theme_changed.connect(self.change_theme)
+        settings.font_setting_changed.connect(self.change_font_setting)
         i = self.tabs.addTab(settings, "Configurações")
         self.tabs.setCurrentIndex(i)
 
     def update_styles(self):
         t = self.current_theme
+        font_family = t.font_family if self.use_theme_font else "inherit"
         self.setStyleSheet(f"""
+            * {{
+                font-family: {font_family};
+            }}
             QMainWindow {{
                 background-color: {t.bg};
             }}
@@ -216,14 +232,23 @@ class SimpleBrowser(QMainWindow):
                 background-color: {t.bg};
             }}
             QTabBar::tab {{
-                background-color: {t.button_bg};
-                color: {t.text};
+                background-color: {t.tab_inactive_bg};
+                color: {t.tab_inactive_text};
                 padding: 10px;
                 border: 1px solid {t.button_border};
+                border-bottom: none;
+                margin-right: 2px;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
             }}
             QTabBar::tab:selected {{
-                background-color: {t.bg};
-                border-bottom: none;
+                background-color: {t.tab_active_bg};
+                color: {t.tab_active_text};
+                border-bottom: 2px solid {t.tab_active_bg};
+            }}
+            QTabBar::tab:hover {{
+                background-color: {t.tab_hover_bg};
+                color: {t.tab_hover_text};
             }}
             QLineEdit {{
                 background-color: {t.input_bg};
@@ -241,6 +266,7 @@ class SimpleBrowser(QMainWindow):
             }}
             QPushButton:hover {{
                 background-color: {t.button_hover};
+                color: {t.button_text_hover};
             }}
             QComboBox {{
                 background-color: {t.button_bg};
@@ -264,7 +290,9 @@ class SimpleBrowser(QMainWindow):
                 self.tabs.setCurrentIndex(i)
                 return
 
-        sua_banda = SuaBandaWidget(theme=self.current_theme)
+        sua_banda = SuaBandaWidget(
+            theme=self.current_theme, use_theme_font=self.use_theme_font
+        )
         i = self.tabs.addTab(sua_banda, "SuaBanda")
         self.tabs.setCurrentIndex(i)
 

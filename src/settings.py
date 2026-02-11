@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QScrollArea,
     QFrame,
+    QCheckBox,
 )
 from PyQt6.QtCore import pyqtSignal
 import themes
@@ -13,20 +14,30 @@ import themes
 
 class SettingsWidget(QWidget):
     theme_changed = pyqtSignal(str)
+    font_setting_changed = pyqtSignal(bool)
 
-    def __init__(self, current_theme_name="Claro", theme=None):
+    def __init__(self, current_theme_name="Claro", theme=None, use_theme_font=True):
         super().__init__()
         self.current_theme_name = current_theme_name
         self.theme = theme
+        self.use_theme_font = use_theme_font
         self.init_ui()
         self.apply_styles()
 
-    def update_theme(self, theme):
+    def update_theme(self, theme, use_theme_font=None):
         self.theme = theme
-        # Update combo box without triggering signals
+        if use_theme_font is not None:
+            self.use_theme_font = use_theme_font
+
+        # Update UI elements without triggering signals
         self.theme_combo.blockSignals(True)
         self.theme_combo.setCurrentText(theme.name)
         self.theme_combo.blockSignals(False)
+
+        self.font_checkbox.blockSignals(True)
+        self.font_checkbox.setChecked(self.use_theme_font)
+        self.font_checkbox.blockSignals(False)
+
         self.apply_styles()
 
     def init_ui(self):
@@ -71,6 +82,15 @@ class SettingsWidget(QWidget):
         theme_layout.addWidget(self.theme_combo)
         self.main_layout.addLayout(theme_layout)
 
+        # Font Support Toggle
+        font_layout = QHBoxLayout()
+        self.font_checkbox = QCheckBox("Usar fonte do tema")
+        self.font_checkbox.setChecked(self.use_theme_font)
+        self.font_checkbox.toggled.connect(self.on_font_setting_changed)
+        font_layout.addWidget(self.font_checkbox)
+        font_layout.addStretch()
+        self.main_layout.addLayout(font_layout)
+
         # About Section
         self.about_label = QLabel("Sobre")
         self.about_label.setStyleSheet(
@@ -98,7 +118,9 @@ class SettingsWidget(QWidget):
         secondary_text = t.secondary_text
         border_color = t.button_border
 
-        self.setStyleSheet(f"background-color: {bg_color};")
+        font_family = t.font_family if self.use_theme_font else ""
+
+        self.setStyleSheet(f"background-color: {bg_color}; font-family: {font_family};")
         self.container.setStyleSheet(f"background-color: {bg_color};")
 
         self.header.setStyleSheet(
@@ -108,6 +130,7 @@ class SettingsWidget(QWidget):
             f"font-size: 18px; font-weight: bold; color: {text_color}; border-bottom: 2px solid {border_color}; padding-bottom: 5px;"
         )
         self.theme_label.setStyleSheet(f"font-size: 14px; color: {text_color};")
+        self.font_checkbox.setStyleSheet(f"font-size: 14px; color: {text_color};")
 
         self.theme_combo.setStyleSheet(f"""
             QComboBox {{
@@ -132,3 +155,8 @@ class SettingsWidget(QWidget):
     def on_theme_changed(self, theme_name):
         self.current_theme_name = theme_name
         self.theme_changed.emit(theme_name)
+
+    def on_font_setting_changed(self, checked):
+        self.use_theme_font = checked
+        self.font_setting_changed.emit(checked)
+        self.apply_styles()

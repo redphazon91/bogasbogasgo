@@ -10,15 +10,18 @@ from PyQt6.QtCore import Qt
 
 
 class SuaBandaWidget(QWidget):
-    def __init__(self, theme=None):
+    def __init__(self, theme=None, use_theme_font=True):
         super().__init__()
         self.theme = theme
+        self.use_theme_font = use_theme_font
         self.utility_buttons = []
         self.init_ui()
         self.apply_styles()
 
-    def update_theme(self, theme):
+    def update_theme(self, theme, use_theme_font=None):
         self.theme = theme
+        if use_theme_font is not None:
+            self.use_theme_font = use_theme_font
         self.apply_styles()
 
     def init_ui(self):
@@ -84,7 +87,9 @@ class SuaBandaWidget(QWidget):
             button_border = t.button_border
             button_hover = t.button_hover
 
-        self.setStyleSheet(f"background-color: {bg_color};")
+        font_family = t.font_family if self.use_theme_font else ""
+
+        self.setStyleSheet(f"background-color: {bg_color}; font-family: {font_family};")
 
         self.header.setStyleSheet(
             f"font-size: 24px; font-weight: bold; margin-bottom: 10px; color: {text_color}; background: transparent;"
@@ -106,6 +111,7 @@ class SuaBandaWidget(QWidget):
             }}
             QPushButton:hover {{
                 background-color: {button_hover};
+                color: {t.button_text_hover if t else "#000000"};
             }}
         """
 
