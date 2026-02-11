@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Bogas Bogas GO
+Icon=bogasbogasgo
+Exec=BogasBogasGo
+Comment=Navegador para Ancaps
+Categories=Network;WebBrowser;
+Terminal=false

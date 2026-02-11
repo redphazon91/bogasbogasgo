@@ -1,0 +1,82 @@
+name: Create Linux AppImage
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libfuse2
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Get Version
+      id: get_version
+      shell: python
+      run: |
+        import os
+        version = "0.0.1"
+        with open('src/defaults.py', 'r') as f:
+            for line in f:
+                if 'BROWSER_VERSION' in line:
+                    version = line.split('=')[1].strip().strip('"').strip("'")
+                    break
+        run_number = os.environ.get('GITHUB_RUN_NUMBER', '0')
+        full_version = f"{version}.{run_number}"
+        print(f"Detected Version: {full_version}")
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+            f.write(f"version={full_version}\n")
+
+    - name: Build Executable with PyInstaller
+      run: |
+        # Build a single-folder distribution
+        pyinstaller --noconsole --name "BogasBogasGo" src/main.py
+
+    - name: Install appimagetool
+      run: |
+        wget -O appimagetool https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+        chmod +x appimagetool
+
+    - name: Prepare AppDir
+      run: |
+        mkdir -p AppDir/usr/bin
+        mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+        
+        # Copy built files
+        cp -r dist/BogasBogasGo/* AppDir/usr/bin/
+        
+        # Copy metadata
+        cp assets/bogasbogasgo.desktop AppDir/
+        cp docs/images/bogasbogasgo-logo.png AppDir/bogasbogasgo.png
+        cp docs/images/bogasbogasgo-logo.png AppDir/usr/share/icons/hicolor/256x256/apps/bogasbogasgo.png
+        
+        # Create AppRun (symlink to the main executable)
+        cd AppDir
+        ln -s usr/bin/BogasBogasGo AppRun
+        cd ..
+
+    - name: Build AppImage
+      run: |
+        export ARCH=x86_64
+        ./appimagetool --appimage-extract-and-run AppDir "bogasbogasgo_v${{ steps.get_version.outputs.version }}-x86_64.AppImage"
+
+    - name: Upload AppImage Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: "bogasbogasgo_v${{ steps.get_version.outputs.version }}-linux_x64"
+        path: "*.AppImage"
