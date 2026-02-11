@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/redphazon91/bogasbogasgo/blob/main/bogasbogasgo-banner.png?raw=true" />
+  <img src="https://github.com/redphazon91/bogasbogasgo/blob/main/docs/images/bogasbogasgo-banner.png?raw=true" />
 </p>
 
 # Bogas Bogas GO
