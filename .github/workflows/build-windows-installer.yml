@@ -1,0 +1,68 @@
+name: Create Windows Installer
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Get Version
+      id: get_version
+      shell: python
+      run: |
+        import os
+        version = "0.0.1"
+        with open('src/defaults.py', 'r') as f:
+            for line in f:
+                if 'BROWSER_VERSION' in line:
+                    version = line.split('=')[1].strip().strip('"').strip("'")
+                    break
+        run_number = os.environ.get('GITHUB_RUN_NUMBER', '0')
+        full_version = f"{version}.{run_number}"
+        print(f"Detected Version: {full_version}")
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+            f.write(f"version={full_version}\n")
+
+    - name: Convert PNG to ICO
+      shell: python
+      run: |
+        import os
+        from PIL import Image
+        os.makedirs("assets", exist_ok=True)
+        img = Image.open("docs/images/bogasbogasgo-logo.png")
+        # Save as ICO with common Windows sizes
+        img.save("assets/icon.ico", format='ICO', sizes=[(256, 256), (64, 64), (32, 32), (16, 16)])
+
+    - name: Build Executable with PyInstaller
+      run: |
+        # This bundles your code and dependencies into a 'dist/main' folder
+        pyinstaller --noconsole --name "BogasBogasGo" --icon "assets/icon.ico" src/main.py
+
+    - name: Compile Installer (Inno Setup)
+      uses: AlbertCasado/Inno-Setup-Action@v1
+      with:
+        iss-file: "build_scripts/windows_setup.iss"
+        options: "/DAppVersion=${{ steps.get_version.outputs.version }}"
+
+    - name: Upload Installer Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: "bogasbogasgo_installer_v${{ steps.get_version.outputs.version }}-win_x64"
+        path: Output/*.exe
