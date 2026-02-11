@@ -2,13 +2,13 @@
 AppName=Bogas Bogas Go
 AppVersion={#AppVersion}
 DefaultDirName={autopf}\BogasBogasGo
-OutputDir=Output
+OutputDir=..\Output
 OutputBaseFilename=bogasbogasgo_installer_v{#AppVersion}-win_x64
-SetupIconFile=assets/icon.ico
+SetupIconFile=..\assets\icon.ico
 
 [Files]
 ; Copy everything PyInstaller built
-Source: "dist\BogasBogasGo\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+Source: "..\dist\BogasBogasGo\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 [Icons]
 ; Create the desktop icon
