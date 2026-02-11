@@ -93,9 +93,7 @@ class SimpleBrowser(QMainWindow):
 
         for favorite in self.favorites:
             btn = QPushButton(favorite["name"])
-            btn.clicked.connect(
-                lambda _, url=favorite["url"]: self.current_browser().setUrl(QUrl(url))
-            )
+            btn.clicked.connect(lambda _, url=favorite["url"]: self.open_url(QUrl(url)))
             btn.setToolTip(f'Ir para {favorite["name"]}\nem "{favorite["url"]}"')
             favorites_bar.addWidget(btn)
 
@@ -303,12 +301,14 @@ class SimpleBrowser(QMainWindow):
             return
         if not url.startswith("http"):
             url = "https://" + url
+        self.open_url(QUrl(url))
 
+    def open_url(self, qurl):
         browser = self.current_browser()
         if isinstance(browser, QWebEngineView):
-            browser.setUrl(QUrl(url))
+            browser.setUrl(qurl)
         else:
-            self.add_new_tab(QUrl(url))
+            self.add_new_tab(qurl)
 
     def update_url_bar(self, q, browser=None):
         if browser != self.current_browser():
