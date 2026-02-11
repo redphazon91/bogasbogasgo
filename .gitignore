@@ -32,6 +32,10 @@ MANIFEST
 *.manifest
 *.spec
 
+# Debian Packaging
+*.deb
+bogasbogasgo_*/
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
