@@ -36,8 +36,7 @@ jobs:
                 if 'BROWSER_VERSION' in line:
                     version = line.split('=')[1].strip().strip('"').strip("'")
                     break
-        run_number = os.environ.get('GITHUB_RUN_NUMBER', '0')
-        full_version = f"{version}.{run_number}"
+        full_version = f"{version}"
         print(f"Detected Version: {full_version}")
         with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
             f.write(f"version={full_version}\n")
