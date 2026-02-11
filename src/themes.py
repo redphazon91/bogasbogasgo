@@ -67,4 +67,23 @@ DRACULA = Theme(
     input_text="#f8f8f2",
 )
 
-THEMES = {"Claro": LIGHT, "Escuro": DARK, "Solarizado": SOLARIZED, "Dracula": DRACULA}
+BAGUS = Theme(
+    name="Bagus",
+    bg="#161616",
+    text="#741516",
+    secondary_text="#ff1616",
+    button_bg="#ff1616",
+    button_border="#741516",
+    button_hover="#741516",
+    nav_bg="#161616",
+    input_bg="#161616",
+    input_text="#741516",
+)
+
+THEMES = {
+    "Claro": LIGHT,
+    "Escuro": DARK,
+    "Solarizado": SOLARIZED,
+    "Dracula": DRACULA,
+    "Bagus": BAGUS,
+}
