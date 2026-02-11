@@ -56,9 +56,9 @@ jobs:
         pyinstaller --noconsole --name "BogasBogasGo" --icon "assets/icon.ico" src/main.py
 
     - name: Compile Installer (Inno Setup)
-      uses: AlbertCasado/Inno-Setup-Action@v1
+      uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
       with:
-        iss-file: "build_scripts/windows_setup.iss"
+        path: "build_scripts/windows_setup.iss"
         options: "/DAppVersion=${{ steps.get_version.outputs.version }}"
 
     - name: Upload Installer Artifact
