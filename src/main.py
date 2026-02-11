@@ -14,11 +14,20 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 import defaults
+from sua_banda import SuaBandaWidget
+from settings import SettingsWidget
+import themes
+import json
+import os
 
 
 class SimpleBrowser(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.settings_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "..", "config.json"
+        )
+        self.load_settings()
         self.setWindowTitle(defaults.BROWSER_NAME)
         self.resize(1200, 800)
 
@@ -33,13 +42,13 @@ class SimpleBrowser(QMainWindow):
         nav_bar = QHBoxLayout()
 
         self.back_btn = QPushButton("←")
-        self.back_btn.clicked.connect(lambda: self.current_browser().back())
+        self.back_btn.clicked.connect(self.back_clicked)
 
         self.forward_btn = QPushButton("→")
-        self.forward_btn.clicked.connect(lambda: self.current_browser().forward())
+        self.forward_btn.clicked.connect(self.forward_clicked)
 
         self.reload_btn = QPushButton("↻")
-        self.reload_btn.clicked.connect(lambda: self.current_browser().reload())
+        self.reload_btn.clicked.connect(self.reload_clicked)
 
         self.url_bar = QLineEdit()
         self.url_bar.returnPressed.connect(self.navigate_to_url)
@@ -48,11 +57,21 @@ class SimpleBrowser(QMainWindow):
         self.new_tab_btn.setText("+")
         self.new_tab_btn.clicked.connect(lambda: self.add_new_tab())
 
+        self.sua_banda_btn = QPushButton("SuaBanda")
+        self.sua_banda_btn.clicked.connect(self.add_sua_banda_tab)
+        self.sua_banda_btn.setStyleSheet("font-weight: bold; color: #d63384;")
+
+        self.settings_btn = QPushButton("⚙️")
+        self.settings_btn.clicked.connect(self.add_settings_tab)
+        self.settings_btn.setToolTip("Configurações")
+
         nav_bar.addWidget(self.back_btn)
         nav_bar.addWidget(self.forward_btn)
         nav_bar.addWidget(self.reload_btn)
         nav_bar.addWidget(self.url_bar)
         nav_bar.addWidget(self.new_tab_btn)
+        nav_bar.addWidget(self.sua_banda_btn)
+        nav_bar.addWidget(self.settings_btn)
 
         # 3. Favorites Bar
         favorites_bar = QHBoxLayout()
@@ -100,6 +119,22 @@ class SimpleBrowser(QMainWindow):
 
         # Add initial tab
         self.add_new_tab(QUrl(defaults.BROWSER_HOMEPAGE), "Home")
+        self.apply_theme()
+
+    def back_clicked(self):
+        browser = self.current_browser()
+        if isinstance(browser, QWebEngineView):
+            browser.back()
+
+    def forward_clicked(self):
+        browser = self.current_browser()
+        if isinstance(browser, QWebEngineView):
+            browser.forward()
+
+    def reload_clicked(self):
+        browser = self.current_browser()
+        if isinstance(browser, QWebEngineView):
+            browser.reload()
 
     def add_new_tab(self, qurl=None, label="New Tab"):
         if qurl is None:
@@ -121,6 +156,120 @@ class SimpleBrowser(QMainWindow):
             )
         )
 
+    def change_theme(self, theme_name):
+        new_theme = themes.THEMES.get(theme_name)
+        if new_theme:
+            self.current_theme = new_theme
+            self.apply_theme()
+            self.save_settings()
+
+    def apply_theme(self):
+        # Update all tabs
+        for i in range(self.tabs.count()):
+            widget = self.tabs.widget(i)
+            if isinstance(widget, (SuaBandaWidget, SettingsWidget)):
+                widget.update_theme(self.current_theme)
+
+        # Update main window and bar styles
+        self.update_styles()
+
+    def load_settings(self):
+        theme_name = "Claro"
+        if os.path.exists(self.settings_file):
+            try:
+                with open(self.settings_file, "r") as f:
+                    data = json.load(f)
+                    theme_name = data.get("theme", "Claro")
+            except Exception as e:
+                print(f"Error loading settings: {e}")
+
+        self.current_theme = themes.THEMES.get(theme_name, themes.LIGHT)
+
+    def save_settings(self):
+        data = {"theme": self.current_theme.name}
+        try:
+            with open(self.settings_file, "w") as f:
+                json.dump(data, f)
+        except Exception as e:
+            print(f"Error saving settings: {e}")
+
+    def add_settings_tab(self):
+        # Check if settings tab already exists
+        for i in range(self.tabs.count()):
+            if isinstance(self.tabs.widget(i), SettingsWidget):
+                self.tabs.setCurrentIndex(i)
+                return
+
+        settings = SettingsWidget(
+            current_theme_name=self.current_theme.name, theme=self.current_theme
+        )
+        settings.theme_changed.connect(self.change_theme)
+        i = self.tabs.addTab(settings, "Configurações")
+        self.tabs.setCurrentIndex(i)
+
+    def update_styles(self):
+        t = self.current_theme
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {t.bg};
+            }}
+            QTabWidget::pane {{
+                border-top: 1px solid {t.button_border};
+                background-color: {t.bg};
+            }}
+            QTabBar::tab {{
+                background-color: {t.button_bg};
+                color: {t.text};
+                padding: 10px;
+                border: 1px solid {t.button_border};
+            }}
+            QTabBar::tab:selected {{
+                background-color: {t.bg};
+                border-bottom: none;
+            }}
+            QLineEdit {{
+                background-color: {t.input_bg};
+                color: {t.input_text};
+                border: 1px solid {t.button_border};
+                padding: 5px;
+                border-radius: 4px;
+            }}
+            QPushButton {{
+                background-color: {t.button_bg};
+                color: {t.text};
+                border: 1px solid {t.button_border};
+                padding: 5px 10px;
+                border-radius: 4px;
+            }}
+            QPushButton:hover {{
+                background-color: {t.button_hover};
+            }}
+            QComboBox {{
+                background-color: {t.button_bg};
+                color: {t.text};
+                border: 1px solid {t.button_border};
+                padding: 2px 5px;
+            }}
+        """)
+        # Specific overrides
+        self.sua_banda_btn.setStyleSheet(
+            f"font-weight: bold; color: #d63384; background-color: {t.button_bg}; border: 1px solid {t.button_border};"
+        )
+        self.settings_btn.setStyleSheet(
+            f"background-color: {t.button_bg}; border: 1px solid {t.button_border}; color: {t.text};"
+        )
+
+    def add_sua_banda_tab(self):
+        # Check if SuaBanda tab already exists
+        for i in range(self.tabs.count()):
+            if isinstance(self.tabs.widget(i), SuaBandaWidget):
+                self.tabs.setCurrentIndex(i)
+                return
+
+        sua_banda = SuaBandaWidget(theme=self.current_theme)
+        i = self.tabs.addTab(sua_banda, "SuaBanda")
+        self.tabs.setCurrentIndex(i)
+
     def current_browser(self):
         return self.tabs.currentWidget()
 
@@ -139,26 +288,42 @@ class SimpleBrowser(QMainWindow):
         self.tabs.removeTab(i)
 
     def tab_changed(self, i):
-        qurl = self.current_browser().url()
-        self.update_url_bar(qurl, self.current_browser())
-        self.update_title(self.current_browser())
+        widget = self.tabs.widget(i)
+        if isinstance(widget, QWebEngineView):
+            qurl = widget.url()
+            self.update_url_bar(qurl, widget)
+            self.update_title(widget)
+        else:
+            self.url_bar.setText("")
+            self.update_title(widget)
 
     def navigate_to_url(self):
         url = self.url_bar.text()
+        if not url:
+            return
         if not url.startswith("http"):
             url = "https://" + url
-        self.current_browser().setUrl(QUrl(url))
+
+        browser = self.current_browser()
+        if isinstance(browser, QWebEngineView):
+            browser.setUrl(QUrl(url))
+        else:
+            self.add_new_tab(QUrl(url))
 
     def update_url_bar(self, q, browser=None):
         if browser != self.current_browser():
             return
-        self.url_bar.setText(q.toString())
+        if q:
+            self.url_bar.setText(q.toString())
 
     def update_title(self, browser):
         if browser != self.current_browser():
             return
-        title = self.current_browser().page().title()
-        self.setWindowTitle(f"{title} - {defaults.BROWSER_NAME}")
+        if hasattr(browser, "page"):
+            title = browser.page().title()
+            self.setWindowTitle(f"{title} - {defaults.BROWSER_NAME}")
+        else:
+            self.setWindowTitle(f"SuaBanda - {defaults.BROWSER_NAME}")
 
 
 app = QApplication(sys.argv)
