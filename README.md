@@ -12,7 +12,8 @@ Browser para Ancaps!!!
 
 ### Funcionalidades
 
-- [ ] Acessar o canal mais falado deste ~Youtube~ X
+- [x] Acessar o canal mais falado deste ~Youtube~ X
+  - [ ] Melhorar ainda mais essa funcionalidade
 - [ ] Usar o grande, nominável, conhecido por todos, com mais buracos que aplicativo criado com N8N, o meu assistente pessoal **SuaBanda**
 - [ ] Botão para doar cincão
 - [ ] Integração para postar notícia automaticamente na ~Revista Ancap Veja~ *Cegueira Estadista*
