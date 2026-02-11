@@ -24,7 +24,8 @@ Entre muitas outras!!!!
 ### Como contribuir
 
 Contribua se tornando um membro da nossa comunidade!
-Quanto mais você participar, mais pontuações você acumula ranques da comunidade!
+Quanto mais você participar, mais pontuações você acumula!
+Você pode ganhar ranques da comunidade e vai ter ~muitos seguidores suvacudos~ muitas gatinhassss!
 
 | Ranque | Descrição |
 |------|-----------|
