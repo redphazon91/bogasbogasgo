@@ -10,6 +10,17 @@ Browser para Ancaps!!!
 
 - Este é um navegador pessoal com suporte a múltiplas funcionalidades ancaps
 
+#### Quick Install
+
+```bash
+# Baixe a versão mais recente
+wget https://github.com/redphazon91/bogasbogasgo/releases/download/latest/bogasbogasgo-linux-deb.zip
+# Descompacte
+unzip bogasbogasgo-linux-deb.zip
+# Instale
+sudo dpkg -i bogasbogasgo_*.deb
+```
+
 ### Funcionalidades
 
 - [x] Acessar o canal mais falado deste ~Youtube~ X
